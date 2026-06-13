@@ -1,5 +1,15 @@
 # mlx-shtf
 
+```
+              __                __    __  ____
+   ____ ___  / /  __      _____/ /_  / /_/ __/
+  / __ `__ \/ / |/_/_____/ ___/ __ \/ __/ /_
+ / / / / / / />  </_____(__  ) / / / /_/ __/
+/_/ /_/ /_/_/_/|_|     /____/_/ /_/\__/_/
+
+        offline AI for when the cloud goes dark
+```
+
 A fully-offline local AI kit for Apple Silicon — **chat**, **doc Q&A** (RAG over your local files), and **coding help**, all running on a local [MLX](https://github.com/ml-explore/mlx) model with **zero network**.
 
 Your break-glass assistant for when cloud models get pulled. (On 2026-06-12, Fable 5 and Mythos 5 were [disabled for *all* users overnight by a US export-control order](https://www.anthropic.com/news/fable-mythos-access) — a reminder that cloud model access can vanish without notice. `mlx-shtf` is the local fallback that doesn't.)
