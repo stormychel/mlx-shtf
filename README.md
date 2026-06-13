@@ -58,6 +58,7 @@ Loading a model bigger than your free RAM **swap-kills the Mac**. Before loading
 - Apple-Silicon macOS — runs under the system `bash` 3.2
 - `pipx` (the installer adds it via Homebrew if missing) → `mlx-lm`
 - `curl` + `python3` for the install-time model sizing
+- `mlx-shtf agent` additionally needs `litellm` (`pipx install 'litellm[proxy]'`) and Claude Code — see [docs/agent.md](docs/agent.md)
 
 ## Documentation
 

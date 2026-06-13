@@ -11,6 +11,8 @@
 | `SHTF_TEMP`       | `0.4`  | Sampling temperature (lower = more deterministic) |
 | `SHTF_FORCE`      | —      | Set to `1` to skip the [RAM-fit guard](ram-guard.md) |
 | `SHTF_LOG`        | `$XDG_STATE_HOME/mlx-shtf/runs.jsonl` (`~/.local/state/mlx-shtf/runs.jsonl`) | Where the run log is written |
+| `SHTF_AGENT_MODEL_PORT` | `8080` | Port for the MLX server started by [`agent`](agent.md) |
+| `SHTF_AGENT_PROXY_PORT` | `8000` | Port for the LiteLLM bridge started by [`agent`](agent.md) |
 
 Install-time only (read by `install.sh`):
 

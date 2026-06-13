@@ -2,6 +2,10 @@
 
 All notable changes to `mlx-shtf`. Versioning is loosely semantic; this is early software.
 
+## [0.1.6] — 2026-06-13
+
+- Fix `mlx-shtf agent` aborting on its first status line with `sport: unbound variable` — a multibyte ellipsis was glued directly onto `$sport`/`$lport`, so bash folded the byte into the variable name. Braced the variables, and verified the full `agent` command end-to-end (not just the bridge pieces).
+
 ## [0.1.5] — 2026-06-13
 
 - **`mlx-shtf agent`** — launch **Claude Code** backed by the local MLX model. Starts `mlx_lm.server`, a LiteLLM bridge (Anthropic↔OpenAI; `hosted_vllm/` provider so it hits `/chat/completions`, not the `/v1/responses` that mlx_lm.server 404s), exports the `ANTHROPIC_*` env, and `exec`s `claude`. RAM-guarded; ports via `SHTF_AGENT_MODEL_PORT`/`SHTF_AGENT_PROXY_PORT`.
