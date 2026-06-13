@@ -2,6 +2,14 @@
 
 All notable changes to `mlx-shtf`. Versioning is loosely semantic; this is early software.
 
+## [0.1.3] — 2026-06-13
+
+Made the RAM guard offline-safe:
+
+- **Graceful fallback** — when the chosen model won't fit in free RAM, fall back to the largest *cached* model that does (no download), instead of refusing. Only refuse if nothing cached fits.
+- **Lifeboat model** — `install.sh` keeps the smallest curated model (~3 GB) cached as a guaranteed-fits offline fallback (`SHTF_SKIP_LIFEBOAT=1` to skip).
+- `SHTF_FORCE=1` still loads the chosen model regardless.
+
 ## [0.1.2] — 2026-06-13
 
 Fixed (caught by runtime testing — shellcheck, bats, and a codex review all missed these):

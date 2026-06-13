@@ -16,8 +16,9 @@ Install-time only (read by `install.sh`):
 
 | Variable | Purpose |
 |----------|---------|
-| `SHTF_SKIP_PULL` | `1` = don't pre-pull the chosen model |
-| `SHTF_BIN_DIR`   | Directory to symlink `shtf` into (default `~/.local/bin`) |
+| `SHTF_SKIP_PULL`     | `1` = don't pre-pull the chosen model |
+| `SHTF_SKIP_LIFEBOAT` | `1` = don't pull the tiny lifeboat fallback model |
+| `SHTF_BIN_DIR`       | Directory to symlink `shtf` into (default `~/.local/bin`) |
 
 Standard HuggingFace variables are also respected for the model cache location: `HF_HOME`, `HF_HUB_CACHE`.
 
