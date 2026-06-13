@@ -3,14 +3,14 @@
 Offline local AI kit for Apple Silicon (chat · RAG ask · code), built on `mlx-lm`. Sibling of `mlx-diff`; same stack and conventions.
 
 ## Layout
-- `bin/shtf` — the CLI (bash, **must stay bash 3.2 compatible** — macOS system bash)
+- `bin/mlx-shtf` — the CLI (bash, **must stay bash 3.2 compatible** — macOS system bash)
 - `install.sh` — RAM-aware model picker + pipx/mlx-lm setup + PATH symlink
 - `test/smoke.bats` — platform-agnostic smoke tests (no model load)
 - `.github/workflows/ci.yml` — shellcheck (pinned v0.11.0) + bats
 
 ## Build / test
 ```bash
-shellcheck bin/shtf install.sh
+shellcheck bin/mlx-shtf install.sh
 bats test/smoke.bats
 ```
 CI runs both on Linux, so tests must only cover paths before the Apple-Silicon preflight (`--version`, `--help`, no-args).

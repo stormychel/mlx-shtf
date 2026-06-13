@@ -1,6 +1,6 @@
 # Configuration
 
-`shtf` is configured by environment variables and a small config file. There are no required settings — it works out of the box after `./install.sh`.
+`mlx-shtf` is configured by environment variables and a small config file. There are no required settings — it works out of the box after `./install.sh`.
 
 ## Environment variables
 
@@ -18,9 +18,9 @@ Install-time only (read by `install.sh`):
 |----------|---------|
 | `SHTF_SKIP_PULL`     | `1` = don't pre-pull the chosen model |
 | `SHTF_SKIP_LIFEBOAT` | `1` = don't pull the tiny lifeboat fallback model |
-| `SHTF_BIN_DIR`       | Directory to symlink `shtf` into (default `~/.local/bin`) |
+| `SHTF_BIN_DIR`       | Directory to symlink `mlx-shtf` into (default `~/.local/bin`) |
 
-Standard HuggingFace variables are also respected for the model cache location: `HF_HOME`, `HF_HUB_CACHE`.
+Standard HuggingFace variables are respected too: `HF_HOME` / `HF_HUB_CACHE` (model cache location) and **`HF_TOKEN`** (authenticates downloads — avoids rate limits and the *"unauthenticated requests to the HF Hub"* warning). Set `HF_TOKEN=hf_…`, or run `hf auth login` once to cache a token; both the installer and the model downloads pick it up automatically.
 
 ## The config file
 
@@ -40,7 +40,7 @@ echo mlx-community/Qwen2.5-32B-Instruct-8bit > ~/.config/mlx-shtf/model
 
 ## Model resolution order
 
-When `shtf` decides which model to load, it checks, highest precedence first:
+When `mlx-shtf` decides which model to load, it checks, highest precedence first:
 
 1. **`$SHTF_MODEL`** — per-run override on the command line
 2. **`~/.config/mlx-shtf/model`** — the install-time / persistent choice
@@ -48,7 +48,7 @@ When `shtf` decides which model to load, it checks, highest precedence first:
 
 ```bash
 # one-off override, doesn't change the default
-SHTF_MODEL=mlx-community/Qwen2.5-7B-Instruct-8bit shtf chat
+SHTF_MODEL=mlx-community/Qwen2.5-7B-Instruct-8bit mlx-shtf chat
 ```
 
 ## Run log

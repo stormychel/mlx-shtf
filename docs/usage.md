@@ -1,17 +1,17 @@
 # Usage
 
 ```
-shtf <command> [args]
+mlx-shtf <command> [args]
 ```
 
 | Command | What it does |
 |---------|--------------|
-| `shtf chat` | Interactive offline chat REPL |
-| `shtf ask <path> <question…>` | Answer a question grounded in local files (RAG) |
-| `shtf code [file] <prompt…>` | Coding help; includes a file as context if given |
-| `shtf <question…>` | One-shot question (no files) |
-| `shtf models` | Print the active model and how to change it |
-| `shtf --version` / `-h`, `--help` | Version / help |
+| `mlx-shtf chat` | Interactive offline chat REPL |
+| `mlx-shtf ask <path> <question…>` | Answer a question grounded in local files (RAG) |
+| `mlx-shtf code [file] <prompt…>` | Coding help; includes a file as context if given |
+| `mlx-shtf <question…>` | One-shot question (no files) |
+| `mlx-shtf models` | Print the active model and how to change it |
+| `mlx-shtf --version` / `-h`, `--help` | Version / help |
 
 All commands run entirely locally — no network is used at inference time.
 
@@ -20,7 +20,7 @@ All commands run entirely locally — no network is used at inference time.
 ## `chat` — interactive REPL
 
 ```bash
-shtf chat
+mlx-shtf chat
 ```
 
 Drops you into an interactive chat with the active model (via `mlx_lm.chat`). Multi-turn; the model keeps conversational context for the session. Exit with `Ctrl-D` or `q`.
@@ -32,14 +32,14 @@ Use it for back-and-forth: brainstorming, explaining concepts, drafting, debuggi
 ## one-shot question
 
 ```bash
-shtf "how do I flush the DNS cache on macOS?"
-shtf write a haiku about offline AI
+mlx-shtf "how do I flush the DNS cache on macOS?"
+mlx-shtf write a haiku about offline AI
 ```
 
-Anything that isn't a known sub-command is treated as a single question and answered in one shot. Good for quick lookups. Output goes to stdout (pipe it, redirect it, etc.); the `→ shtf: thinking…` status line goes to stderr.
+Anything that isn't a known sub-command is treated as a single question and answered in one shot. Good for quick lookups. Output goes to stdout (pipe it, redirect it, etc.); the `→ mlx-shtf: thinking…` status line goes to stderr.
 
 ```bash
-shtf "one-line awk to sum column 2" >> notes.md
+mlx-shtf "one-line awk to sum column 2" >> notes.md
 ```
 
 ---
@@ -47,15 +47,15 @@ shtf "one-line awk to sum column 2" >> notes.md
 ## `ask` — Q&A grounded in local files (RAG)
 
 ```bash
-shtf ask <path> <question…>
+mlx-shtf ask <path> <question…>
 ```
 
 Retrieves the most relevant local text files under `<path>`, feeds them to the model as context, and answers **using only those files** — citing the paths it used.
 
 ```bash
-shtf ask ./docs "how does the ram guard decide to block?"
-shtf ask ~/notes "what did I decide about the database migration?"
-shtf ask . "where is the model resolution order defined?"
+mlx-shtf ask ./docs "how does the ram guard decide to block?"
+mlx-shtf ask ~/notes "what did I decide about the database migration?"
+mlx-shtf ask . "where is the model resolution order defined?"
 ```
 
 - `<path>` can be a directory or a single file.
@@ -70,14 +70,14 @@ shtf ask . "where is the model resolution order defined?"
 ## `code` — coding help
 
 ```bash
-shtf code <file> <prompt…>      # with a file for context
-shtf code <prompt…>             # prompt only
+mlx-shtf code <file> <prompt…>      # with a file for context
+mlx-shtf code <prompt…>             # prompt only
 ```
 
 ```bash
-shtf code ./server.swift "are there any retain cycles here?"
-shtf code ./deploy.sh "explain what this does and flag risky lines"
-shtf code "write a bash function that retries a command 3 times with backoff"
+mlx-shtf code ./server.swift "are there any retain cycles here?"
+mlx-shtf code ./deploy.sh "explain what this does and flag risky lines"
+mlx-shtf code "write a bash function that retries a command 3 times with backoff"
 ```
 
 When a file is given as the first argument, its contents are included as context. Uses a coding-focused system prompt (correct, idiomatic, minimal).
@@ -87,12 +87,12 @@ When a file is given as the first argument, its contents are included as context
 ## `models` — show / change the active model
 
 ```bash
-shtf models
+mlx-shtf models
 ```
 
 ```
 active model: mlx-community/Qwen2.5-14B-Instruct-8bit
-  set per-run:  SHTF_MODEL=<hf-repo> shtf …
+  set per-run:  SHTF_MODEL=<hf-repo> mlx-shtf …
   set default:  echo <hf-repo> > ~/.config/mlx-shtf/model   (or re-run ./install.sh)
 ```
 
@@ -105,7 +105,7 @@ See [Models](models.md) and [Configuration](configuration.md).
 Any run can be tuned with environment variables (see [Configuration](configuration.md)):
 
 ```bash
-SHTF_MODEL=mlx-community/Qwen2.5-32B-Instruct-8bit shtf "explain TCP slow start"
-SHTF_MAX_TOKENS=2048 shtf code ./parser.py "rewrite this to be streaming"
-SHTF_TEMP=0.1 shtf ask . "what is the exact default chunk budget?"
+SHTF_MODEL=mlx-community/Qwen2.5-32B-Instruct-8bit mlx-shtf "explain TCP slow start"
+SHTF_MAX_TOKENS=2048 mlx-shtf code ./parser.py "rewrite this to be streaming"
+SHTF_TEMP=0.1 mlx-shtf ask . "what is the exact default chunk budget?"
 ```

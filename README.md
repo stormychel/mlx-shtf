@@ -14,17 +14,17 @@ cd mlx-shtf
 ./install.sh
 ```
 
-`install.sh` verifies the host is Apple Silicon, installs `mlx-lm` via `pipx`, lets you **pick a model that fits your RAM** (color-ranked by fit, with already-installed models marked), pulls it, and symlinks `shtf` into `~/.local/bin`. Re-run any time to change model.
+`install.sh` verifies the host is Apple Silicon, installs `mlx-lm` via `pipx`, lets you **pick a model that fits your RAM** (color-ranked by fit, with already-installed models marked), pulls it, and symlinks `mlx-shtf` into `~/.local/bin`. Re-run any time to change model.
 
 ## Usage
 
 ```bash
-shtf chat                              # interactive offline chat (REPL)
-shtf "how do I flush DNS on macOS?"    # one-shot question
-shtf ask ./docs "how does auth work?"  # RAG: answer grounded in local files
-shtf code ./server.swift "find bugs"   # coding help, file as context
-shtf code "write a bash retry wrapper" # coding help, prompt only
-shtf models                            # show the active model / how to change
+mlx-shtf chat                              # interactive offline chat (REPL)
+mlx-shtf "how do I flush DNS on macOS?"    # one-shot question
+mlx-shtf ask ./docs "how does auth work?"  # RAG: answer grounded in local files
+mlx-shtf code ./server.swift "find bugs"   # coding help, file as context
+mlx-shtf code "write a bash retry wrapper" # coding help, prompt only
+mlx-shtf models                            # show the active model / how to change
 ```
 
 | Command | What it does |
@@ -44,12 +44,13 @@ shtf models                            # show the active model / how to change
 | `SHTF_TEMP`       | `0.4`  | Sampling temperature |
 | `SHTF_FORCE`      | —      | Set to `1` to skip the RAM-fit guard |
 | `SHTF_LOG`        | `$XDG_STATE_HOME/mlx-shtf/runs.jsonl` | Run log |
+| `HF_TOKEN`        | —      | HuggingFace token — avoids download rate limits and the "unauthenticated requests" warning (or run `hf auth login`) |
 
 The install-time model choice is stored at `~/.config/mlx-shtf/model`.
 
 ## RAM-fit guard
 
-Loading a model bigger than your free RAM **swap-kills the Mac**. Before loading a cached model, `shtf` compares its size to currently-available RAM and refuses (with a clear message) rather than crashing — close apps, pick a smaller model, or `SHTF_FORCE=1` to override.
+Loading a model bigger than your free RAM **swap-kills the Mac**. Before loading a cached model, `mlx-shtf` compares its size to currently-available RAM and refuses (with a clear message) rather than crashing — close apps, pick a smaller model, or `SHTF_FORCE=1` to override.
 
 ## Requirements
 

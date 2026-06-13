@@ -1,6 +1,6 @@
 # Models
 
-`shtf` runs any [MLX](https://huggingface.co/mlx-community) instruct model. The installer offers a curated, RAM-ranked shortlist; you can also point it at any other model.
+`mlx-shtf` runs any [MLX](https://huggingface.co/mlx-community) instruct model. The installer offers a curated, RAM-ranked shortlist; you can also point it at any other model.
 
 ## Curated shortlist
 
@@ -36,7 +36,7 @@ Any MLX-format instruct model works — pass its HuggingFace repo id:
 
 ```bash
 # one-off
-SHTF_MODEL=mlx-community/Qwen2.5-Coder-32B-Instruct-8bit shtf code ./x.swift "review this"
+SHTF_MODEL=mlx-community/Qwen2.5-Coder-32B-Instruct-8bit mlx-shtf code ./x.swift "review this"
 
 # make it the default
 echo mlx-community/Qwen2.5-Coder-32B-Instruct-8bit > ~/.config/mlx-shtf/model

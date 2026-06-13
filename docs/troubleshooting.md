@@ -17,7 +17,7 @@ Or just run `./install.sh`, which handles both.
 
 ## `… needs ~N GB but only ~M GB is free`
 
-The [RAM guard](ram-guard.md) is stopping you from loading a model that won't fit in available memory. Close apps, pick a smaller model (`shtf models`), or override with `SHTF_FORCE=1`.
+The [RAM guard](ram-guard.md) is stopping you from loading a model that won't fit in available memory. Close apps, pick a smaller model (`mlx-shtf models`), or override with `SHTF_FORCE=1`.
 
 ## `error: generation failed … mlx_lm said:`
 
@@ -29,7 +29,7 @@ The model failed to load or generate. The model's own error is printed below the
 
 ## `no local files under '<path>' matched: <question>`
 
-`shtf ask` found no text files containing your question's keywords. Try:
+`mlx-shtf ask` found no text files containing your question's keywords. Try:
 
 - More specific / longer words (keywords must be ≥ 4 characters).
 - A broader `<path>`.
@@ -38,6 +38,18 @@ The model failed to load or generate. The model's own error is printed below the
 ## `question has no searchable keywords`
 
 Your `ask` question had no words of 4+ characters. Rephrase with more substantial terms.
+
+## `Warning: You are sending unauthenticated requests to the HF Hub…`
+
+Harmless, but downloads are rate-limited without a token. Authenticate once and it goes away:
+
+```bash
+export HF_TOKEN=hf_xxx        # a read token from https://huggingface.co/settings/tokens
+# or:
+hf auth login                # caches a token for all future downloads
+```
+
+`install.sh` tells you whether a token was detected and how to set one.
 
 ## First run is slow / downloads a lot
 

@@ -23,16 +23,16 @@ So: **always run it for real before claiming it works.**
 
 ```bash
 # 1. static
-shellcheck bin/shtf install.sh
+shellcheck bin/mlx-shtf install.sh
 bats test/smoke.bats
 
 # 2. runtime — under the ACTUAL system bash 3.2, with a TINY model (safe, ~75 MB)
 M=mlx-community/SmolLM-135M-Instruct-4bit
-/bin/bash bin/shtf --version
-SHTF_MODEL=$M SHTF_MAX_TOKENS=24 bin/shtf "say hi"
-SHTF_MODEL=$M SHTF_MAX_TOKENS=40 bin/shtf ask . "what does install do"
-SHTF_MODEL=$M bin/shtf code VERSION "what is this"
-SHTF_MODEL=mlx-community/does-not-exist bin/shtf "hi"   # must exit non-zero with a clear error
+/bin/bash bin/mlx-shtf --version
+SHTF_MODEL=$M SHTF_MAX_TOKENS=24 bin/mlx-shtf "say hi"
+SHTF_MODEL=$M SHTF_MAX_TOKENS=40 bin/mlx-shtf ask . "what does install do"
+SHTF_MODEL=$M bin/mlx-shtf code VERSION "what is this"
+SHTF_MODEL=mlx-community/does-not-exist bin/mlx-shtf "hi"   # must exit non-zero with a clear error
 ```
 
 Use a tiny model (`SmolLM-135M`) to test *plumbing* without loading a 30 GB model — it exercises the full data flow with zero crash risk. It produces nonsense answers; that's fine, you're testing wiring, not quality.
@@ -49,7 +49,7 @@ The CLI runs under the macOS system bash (3.2.57). Avoid:
 - **Nested process substitution** `<( … <(…) … )` — flatten via a temp file.
 - `A && B || C` where `B` can fail — shellcheck flags SC2015; use an `if`.
 
-`install.sh` and `bin/shtf` may use process substitution and arrays, just not nested process substitution or 4+-only builtins.
+`install.sh` and `bin/mlx-shtf` may use process substitution and arrays, just not nested process substitution or 4+-only builtins.
 
 ## Style
 
@@ -59,7 +59,7 @@ The CLI runs under the macOS system bash (3.2.57). Avoid:
 
 ## Releases
 
-Follow the repo's commit conventions: release commits use `New version X.Y.Z - <title>` with a bulleted body; non-release commits are a bare bulleted list. Bump `VERSION`, the `VERSION=` line in `bin/shtf`, and the assertion in `test/smoke.bats` together. CI (shellcheck pinned to v0.11.0 + bats) must be green; tag a GitHub release.
+Follow the repo's commit conventions: release commits use `New version X.Y.Z - <title>` with a bulleted body; non-release commits are a bare bulleted list. Bump `VERSION`, the `VERSION=` line in `bin/mlx-shtf`, and the assertion in `test/smoke.bats` together. CI (shellcheck pinned to v0.11.0 + bats) must be green; tag a GitHub release.
 
 ## CI
 

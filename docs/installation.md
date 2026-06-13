@@ -23,7 +23,7 @@ cd mlx-shtf
 2. Installs `pipx` (via Homebrew) and `mlx-lm` if not already present.
 3. Detects your system RAM and shows a **color-ranked model picker** — each model's real size is fetched from HuggingFace and rated by how well it fits, with already-installed models marked `✓ installed`.
 4. Pulls the model you choose (skips the download if it's already cached).
-5. Symlinks `shtf` into `~/.local/bin`.
+5. Symlinks `mlx-shtf` into `~/.local/bin`.
 
 Re-run `./install.sh` any time to change the model.
 
@@ -59,19 +59,19 @@ SHTF_SKIP_PULL=1 ./install.sh </dev/null                                     # s
 |-----------------------|--------|
 | `SHTF_MODEL`     | Forces a specific model (overrides the picker recommendation) |
 | `SHTF_SKIP_PULL` | `1` = don't pre-pull the model; it downloads on first use |
-| `SHTF_BIN_DIR`   | Where to symlink `shtf` (default `~/.local/bin`) |
+| `SHTF_BIN_DIR`   | Where to symlink `mlx-shtf` (default `~/.local/bin`) |
 
 ## Manual install (no installer)
 
 ```bash
 pipx install mlx-lm
-ln -sf "$PWD/bin/shtf" ~/.local/bin/shtf
+ln -sf "$PWD/bin/mlx-shtf" ~/.local/bin/mlx-shtf
 echo mlx-community/Qwen2.5-14B-Instruct-8bit > ~/.config/mlx-shtf/model   # optional default
 ```
 
 ## PATH note
 
-`shtf` is symlinked into `~/.local/bin`. If that isn't on your `PATH`, add it to your shell profile:
+`mlx-shtf` is symlinked into `~/.local/bin`. If that isn't on your `PATH`, add it to your shell profile:
 
 ```bash
 export PATH="$HOME/.local/bin:$PATH"

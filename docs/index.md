@@ -10,7 +10,7 @@ A fully-offline local AI kit for Apple Silicon — **chat**, **doc Q&A** (RAG ov
 - [Usage](usage.md) — every command, with examples
 - [Configuration](configuration.md) — env vars, the config file, resolution precedence
 - [Models](models.md) — the curated list, RAM-fit ranking, using your own model
-- [RAM guard](ram-guard.md) — how `shtf` avoids swap-killing your Mac
+- [RAM guard](ram-guard.md) — how `mlx-shtf` avoids swap-killing your Mac
 - [Architecture](architecture.md) — how chat / ask / code work under the hood
 - [Troubleshooting](troubleshooting.md) — common errors and fixes
 - [Contributing](contributing.md) — dev setup, testing discipline, bash 3.2 rules
@@ -21,9 +21,9 @@ A fully-offline local AI kit for Apple Silicon — **chat**, **doc Q&A** (RAG ov
 ```bash
 git clone https://github.com/stormychel/mlx-shtf.git
 cd mlx-shtf && ./install.sh          # picks a model that fits your RAM
-shtf "what's the syntax for a launchd plist?"
-shtf chat
-shtf ask ./docs "how does the ram guard work?"
+mlx-shtf "what's the syntax for a launchd plist?"
+mlx-shtf chat
+mlx-shtf ask ./docs "how does the ram guard work?"
 ```
 
 ## At a glance

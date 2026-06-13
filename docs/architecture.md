@@ -1,16 +1,16 @@
 # Architecture
 
-`mlx-shtf` is a single bash script (`bin/shtf`) that dispatches sub-commands to a local MLX model via the `mlx-lm` CLI. There is no daemon, no server, no network at inference time.
+`mlx-shtf` is a single bash script (`bin/mlx-shtf`) that dispatches sub-commands to a local MLX model via the `mlx-lm` CLI. There is no daemon, no server, no network at inference time.
 
 ```
-shtf <cmd> ─► resolve model ─► RAM guard ─► build prompt ─► mlx_lm.generate ─► stdout
+mlx-shtf <cmd> ─► resolve model ─► RAM guard ─► build prompt ─► mlx_lm.generate ─► stdout
                                                  │
               chat ──────────────────────────────┴─► mlx_lm.chat (interactive REPL)
 ```
 
 ## Components
 
-- **`bin/shtf`** — the CLI. Dispatch, model resolution, RAM guard, prompt assembly, retrieval, and output. Must stay **bash 3.2 compatible** (macOS system bash).
+- **`bin/mlx-shtf`** — the CLI. Dispatch, model resolution, RAM guard, prompt assembly, retrieval, and output. Must stay **bash 3.2 compatible** (macOS system bash).
 - **`mlx_lm.generate`** — one-shot generation (used by `ask`, `code`, one-shot questions).
 - **`mlx_lm.chat`** — the interactive REPL (used by `chat`).
 - **`install.sh`** — the RAM-aware model picker and environment setup.
@@ -22,7 +22,7 @@ All non-chat commands funnel through one `generate()` function:
 1. The assembled prompt is captured to a temp file.
 2. The RAM guard runs (see [RAM guard](ram-guard.md)).
 3. `mlx_lm.generate --system-prompt <sys> --prompt - <tempfile>` runs in the **foreground**, output to a temp file, stderr captured.
-4. On non-zero exit **or empty output**, the model's stderr is surfaced and `shtf` exits non-zero — failures never masquerade as a blank answer.
+4. On non-zero exit **or empty output**, the model's stderr is surfaced and `mlx-shtf` exits non-zero — failures never masquerade as a blank answer.
 
 Two deliberate choices, both hard-won:
 
@@ -31,7 +31,7 @@ Two deliberate choices, both hard-won:
 
 ## `ask` — RAG retrieval
 
-`shtf ask <path> <question>` does lexical retrieval (v0.1; embeddings are planned):
+`mlx-shtf ask <path> <question>` does lexical retrieval (v0.1; embeddings are planned):
 
 1. **Keywords** — the question is lowercased and split into words ≥ 4 characters.
 2. **Rank** — every text file under `<path>` (under 200 KB, `.git` excluded, binary skipped via `grep -I`) is scored by how many keyword occurrences it contains (`grep -oiE`).

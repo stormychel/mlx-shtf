@@ -2,6 +2,12 @@
 
 All notable changes to `mlx-shtf`. Versioning is loosely semantic; this is early software.
 
+## [0.1.4] — 2026-06-13
+
+- **Renamed the command `shtf` → `mlx-shtf`** for consistency with `mlx-diff`. Config/state dirs (`~/.config/mlx-shtf`, `~/.local/state/mlx-shtf`) and `SHTF_*` env vars are unchanged. Re-run `./install.sh` to update the symlink.
+- **HuggingFace token support** — `install.sh` detects a token (`HF_TOKEN` env or a cached `hf auth login` token), uses it for the model-sizing requests, and nudges you to set one if missing. Model downloads already pick it up automatically. Removes the "unauthenticated requests to the HF Hub" rate-limit warning.
+- Docs updated throughout.
+
 ## [0.1.3] — 2026-06-13
 
 Made the RAM guard offline-safe:
@@ -31,11 +37,11 @@ Dismissed: codex's claim that `--prompt -` is treated literally — `mlx_lm` doc
 
 First release. Offline local AI kit for Apple Silicon, kicked off in response to the [Fable 5 / Mythos 5 suspension](https://www.anthropic.com/news/fable-mythos-access).
 
-- `shtf chat` — interactive offline REPL (`mlx_lm.chat`).
-- `shtf ask <path> <question>` — lexical RAG over local files.
-- `shtf code [file] <prompt>` — coding help with optional file context.
-- `shtf <question>` — one-shot question.
-- `shtf models` — show / change the active model.
+- `mlx-shtf chat` — interactive offline REPL (`mlx_lm.chat`).
+- `mlx-shtf ask <path> <question>` — lexical RAG over local files.
+- `mlx-shtf code [file] <prompt>` — coding help with optional file context.
+- `mlx-shtf <question>` — one-shot question.
+- `mlx-shtf models` — show / change the active model.
 - RAM-aware `install.sh` model picker over curated general-instruct models, with `✓ installed` markers and skip-if-cached.
 - Runtime **RAM-fit guard** — refuses to load a model larger than free RAM.
 - Apple-Silicon only; bash 3.2 compatible; shellcheck (pinned) + bats CI; mirrors the `mlx-diff` stack.

@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 #
-#  shtf
+#  mlx-shtf
 #  mlx-shtf
 #
 #  Created by Michel Storms on 13/06/2026.
@@ -11,7 +11,7 @@
 
 set -euo pipefail
 
-VERSION="0.1.3"
+VERSION="0.1.4"
 DEFAULT_MODEL="mlx-community/Qwen2.5-14B-Instruct-8bit"
 
 CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/mlx-shtf"
@@ -30,15 +30,15 @@ die() { printf 'error: %s\n' "$1" >&2; exit 1; }
 
 usage() {
   cat <<EOF
-shtf $VERSION — offline local AI kit for Apple Silicon (chat · ask · code).
+mlx-shtf $VERSION — offline local AI kit for Apple Silicon (chat · ask · code).
 
 Usage:
-  shtf chat                      Interactive offline chat (REPL)
-  shtf ask <path> <question…>    Answer grounded in local files (RAG)
-  shtf code [file] <prompt…>     Coding help; include a file for context
-  shtf <question…>               One-shot question (no files)
-  shtf models                    Show the active model and how to change it
-  shtf --version | -h, --help
+  mlx-shtf chat                      Interactive offline chat (REPL)
+  mlx-shtf ask <path> <question…>    Answer grounded in local files (RAG)
+  mlx-shtf code [file] <prompt…>     Coding help; include a file for context
+  mlx-shtf <question…>               One-shot question (no files)
+  mlx-shtf models                    Show the active model and how to change it
+  mlx-shtf --version | -h, --help
 
 Environment:
   SHTF_MODEL        Model repo (default: install-time choice or $DEFAULT_MODEL)
@@ -125,7 +125,7 @@ generate() {
   inf="$(mktemp)"; outf="$(mktemp)"; errf="$(mktemp)"
   cat > "$inf"
   ram_guard
-  printf '→ shtf: thinking with %s…\n' "$MODEL_SHORT" >&2
+  printf '→ mlx-shtf: thinking with %s…\n' "$MODEL_SHORT" >&2
   mlx_lm.generate --model "$MODEL" --system-prompt "$sys" --prompt - \
     --max-tokens "$MAX_TOKENS" --temp "$TEMP" --verbose False <"$inf" >"$outf" 2>"$errf" || rc=$?
   if (( rc != 0 )) || ! [[ "$(cat "$outf")" =~ [^[:space:]] ]]; then
@@ -152,16 +152,16 @@ case "$cmd" in
   chat)
     command -v mlx_lm.chat >/dev/null 2>&1 || die "mlx_lm.chat not found (update mlx-lm)."
     ram_guard
-    echo "→ shtf: offline chat with $MODEL_SHORT  (Ctrl-D / 'q' to quit)" >&2
+    echo "→ mlx-shtf: offline chat with $MODEL_SHORT  (Ctrl-D / 'q' to quit)" >&2
     log_run chat
     exec mlx_lm.chat --model "$MODEL"
     ;;
 
   code)
-    [[ $# -gt 0 ]] || die "usage: shtf code [file] <prompt…>"
+    [[ $# -gt 0 ]] || die "usage: mlx-shtf code [file] <prompt…>"
     local_file=""; if [[ -f "$1" ]]; then local_file="$1"; shift; fi
     prompt="$*"
-    [[ -n "$prompt" || -n "$local_file" ]] || die "usage: shtf code [file] <prompt…>"
+    [[ -n "$prompt" || -n "$local_file" ]] || die "usage: mlx-shtf code [file] <prompt…>"
     log_run code
     if [[ -n "$local_file" ]]; then
       combined="$(printf '%s\n\n=== %s ===\n' "${prompt:-Review this file and explain it.}" "$local_file"; cat "$local_file")"
@@ -172,7 +172,7 @@ case "$cmd" in
     ;;
 
   ask)
-    [[ $# -ge 2 ]] || die "usage: shtf ask <path> <question…>"
+    [[ $# -ge 2 ]] || die "usage: mlx-shtf ask <path> <question…>"
     path="$1"; shift; question="$*"
     [[ -e "$path" ]] || die "path not found: $path"
     log_run ask
@@ -206,7 +206,7 @@ case "$cmd" in
 
   models)
     echo "active model: $MODEL"
-    echo "  set per-run:  SHTF_MODEL=<hf-repo> shtf …"
+    echo "  set per-run:  SHTF_MODEL=<hf-repo> mlx-shtf …"
     echo "  set default:  echo <hf-repo> > $CONFIG_DIR/model   (or re-run ./install.sh)"
     ;;
 

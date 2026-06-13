@@ -1,6 +1,6 @@
 # The RAM-fit guard
 
-Loading a model larger than your **free** RAM forces macOS into heavy swap and can hard-lock or kill the machine. Before loading a model, `shtf` checks it fits in currently-available RAM. Crucially — because this is an *offline* tool — it doesn't just dead-end when the model is too big:
+Loading a model larger than your **free** RAM forces macOS into heavy swap and can hard-lock or kill the machine. Before loading a model, `mlx-shtf` checks it fits in currently-available RAM. Crucially — because this is an *offline* tool — it doesn't just dead-end when the model is too big:
 
 1. **Fits?** Run it.
 2. **Doesn't fit, but a smaller cached model does?** Fall back to the largest **cached** model that fits — fully offline, no download.
@@ -10,7 +10,7 @@ Loading a model larger than your **free** RAM forces macOS into heavy swap and c
 
 ## Graceful fallback (the offline-safe part)
 
-When your chosen model won't fit, `shtf` scans the local model cache and switches to the largest already-downloaded model that *does* fit:
+When your chosen model won't fit, `mlx-shtf` scans the local model cache and switches to the largest already-downloaded model that *does* fit:
 
 ```
 warning: Qwen2.5-32B-Instruct-8bit needs ~32 GB but only ~10 GB is free —
@@ -44,7 +44,7 @@ So the fallback always has *something* to land on, `./install.sh` keeps one tiny
 ## Overriding
 
 ```bash
-SHTF_FORCE=1 shtf chat          # load the chosen model regardless of fit
+SHTF_FORCE=1 mlx-shtf chat          # load the chosen model regardless of fit
 export SHTF_FORCE=1             # for the whole shell session
 ```
 
@@ -54,5 +54,5 @@ The guard's job isn't to forbid — it's to stop you swap-killing the Mac *by ac
 
 - **Close memory-heavy apps** (browsers, VMs, Xcode, Docker) and retry.
 - **Let it fall back** — it already picks a smaller cached model automatically.
-- **Pick a smaller default** — `shtf models`, or re-run `./install.sh` and choose a ROOMY one ([Models](models.md)).
+- **Pick a smaller default** — `mlx-shtf models`, or re-run `./install.sh` and choose a ROOMY one ([Models](models.md)).
 - Check usage: Activity Monitor → Memory, or `top -o mem`.

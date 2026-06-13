@@ -6,14 +6,14 @@
 #  Created by Michel Storms on 13/06/2026.
 #
 #  Idempotent installer: verifies the host, installs mlx-lm, lets you pick a
-#  model that fits this machine's RAM, pulls it, and symlinks `shtf` onto PATH.
+#  model that fits this machine's RAM, pulls it, and symlinks `mlx-shtf` onto PATH.
 #  Safe to re-run.
 
 set -euo pipefail
 
 REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-BIN_SRC="$REPO_DIR/bin/shtf"
-BIN_DEST="${SHTF_BIN_DIR:-$HOME/.local/bin}/shtf"
+BIN_SRC="$REPO_DIR/bin/mlx-shtf"
+BIN_DEST="${SHTF_BIN_DIR:-$HOME/.local/bin}/mlx-shtf"
 CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/mlx-shtf"
 
 # Curated general-instruct models, smallest → largest, as "repo<TAB>fallback-GiB".
@@ -37,10 +37,23 @@ fi
 say() { printf '%s==>%s %s\n' "$BOLD" "$RST" "$1"; }
 die() { printf '%serror:%s %s\n' "$RED" "$RST" "$1" >&2; exit 1; }
 
+# HuggingFace auth: a token (HF_TOKEN env, or a cached `hf auth login` token)
+# avoids rate limits and the "unauthenticated requests" warning on downloads.
+hf_token() {
+  if [[ -n "${HF_TOKEN:-}" ]]; then printf '%s' "$HF_TOKEN"; return; fi
+  local f="${HF_HOME:-$HOME/.cache/huggingface}/token"
+  [[ -r "$f" ]] && tr -d '[:space:]' < "$f"
+}
+hf_get() {                          # $1 = url → body (authenticated if a token exists)
+  local tok; tok="$(hf_token)"
+  if [[ -n "$tok" ]]; then curl -sS -m 20 -H "Authorization: Bearer $tok" "$1" 2>/dev/null
+  else curl -sS -m 20 "$1" 2>/dev/null; fi
+}
+
 size_gib() {                        # <repo> <fallback> → .safetensors size in GiB
   local bytes=""
   if command -v curl >/dev/null 2>&1 && command -v python3 >/dev/null 2>&1; then
-    bytes="$(curl -sS -m 20 "https://huggingface.co/api/models/$1?blobs=true" 2>/dev/null | python3 -c '
+    bytes="$(hf_get "https://huggingface.co/api/models/$1?blobs=true" | python3 -c '
 import sys, json
 try:
     d = json.load(sys.stdin)
@@ -76,6 +89,14 @@ model_cached() {                    # <repo>
 [[ "$(uname -s)/$(uname -m)" == "Darwin/arm64" ]] || \
   die "mlx-shtf requires Apple Silicon macOS — MLX is unsupported on $(uname -s)/$(uname -m)."
 say "Host OK: $(uname -s) $(uname -m)"
+
+# HuggingFace token nudge (downloads are rate-limited / warn without one).
+if [[ -n "$(hf_token)" ]]; then
+  say "HuggingFace token detected — authenticated downloads."
+else
+  say "No HuggingFace token — downloads may be slow/rate-limited."
+  say "  Optional: export HF_TOKEN=hf_…  (or run: hf auth login)  then re-run."
+fi
 
 # 2. pipx
 if ! command -v pipx >/dev/null 2>&1; then
@@ -167,7 +188,7 @@ if [[ "${SHTF_SKIP_LIFEBOAT:-0}" != "1" && "$CHOSEN" != "$LIFEBOAT" ]]; then
     if mlx_lm.generate --model "$LIFEBOAT" --prompt "ok" --max-tokens 1 --verbose False >/dev/null 2>&1; then
       say "Lifeboat ready."
     else
-      say "Lifeboat pull skipped/failed — fetch it later with: SHTF_MODEL=$LIFEBOAT shtf hi"
+      say "Lifeboat pull skipped/failed — fetch it later with: SHTF_MODEL=$LIFEBOAT mlx-shtf hi"
     fi
   fi
 fi
@@ -183,4 +204,4 @@ case ":$PATH:" in
   *) say "NOTE: $(dirname "$BIN_DEST") is not on your PATH — add it to your shell profile." ;;
 esac
 
-say "Done. Try:  shtf chat   ·   shtf \"hello\"   ·   shtf ask . \"what does this repo do?\""
+say "Done. Try:  mlx-shtf chat   ·   mlx-shtf \"hello\"   ·   mlx-shtf ask . \"what does this repo do?\""
