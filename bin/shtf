@@ -1,0 +1,171 @@
+#!/usr/bin/env bash
+#
+#  shtf
+#  mlx-shtf
+#
+#  Created by Michel Storms on 13/06/2026.
+#
+#  A fully-offline local AI kit for Apple Silicon — chat, doc Q&A (RAG over
+#  local files), and coding help, all running on a local MLX model with zero
+#  network. Your break-glass assistant for when cloud models get pulled.
+
+set -euo pipefail
+
+VERSION="0.1.0"
+DEFAULT_MODEL="mlx-community/Qwen2.5-14B-Instruct-8bit"
+
+CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/mlx-shtf"
+STATE_DIR="${XDG_STATE_HOME:-$HOME/.local/state}/mlx-shtf"
+LOG_FILE="${SHTF_LOG:-$STATE_DIR/runs.jsonl}"
+
+# Model resolution: $SHTF_MODEL > install-time choice (config) > built-in default.
+CFG_MODEL=""
+[[ -r "$CONFIG_DIR/model" ]] && CFG_MODEL="$(tr -d '[:space:]' < "$CONFIG_DIR/model")"
+MODEL="${SHTF_MODEL:-${CFG_MODEL:-$DEFAULT_MODEL}}"
+MAX_TOKENS="${SHTF_MAX_TOKENS:-1024}"
+TEMP="${SHTF_TEMP:-0.4}"
+MODEL_SHORT="${MODEL##*/}"
+
+die() { printf 'error: %s\n' "$1" >&2; exit 1; }
+
+usage() {
+  cat <<EOF
+shtf $VERSION — offline local AI kit for Apple Silicon (chat · ask · code).
+
+Usage:
+  shtf chat                      Interactive offline chat (REPL)
+  shtf ask <path> <question…>    Answer grounded in local files (RAG)
+  shtf code [file] <prompt…>     Coding help; include a file for context
+  shtf <question…>               One-shot question (no files)
+  shtf models                    Show the active model and how to change it
+  shtf --version | -h, --help
+
+Environment:
+  SHTF_MODEL        Model repo (default: install-time choice or $DEFAULT_MODEL)
+  SHTF_MAX_TOKENS   Max generated tokens (default: 1024)
+  SHTF_TEMP         Sampling temperature (default: 0.4)
+  SHTF_FORCE=1      Skip the RAM-fit guard
+EOF
+}
+
+# --- dispatch version/help before any host/model work ---
+cmd="${1:-}"
+case "$cmd" in
+  --version) echo "mlx-shtf $VERSION"; exit 0 ;;
+  -h|--help|"") usage; exit 0 ;;
+esac
+shift
+
+# --- host preflight: MLX is Apple-Silicon-only ---
+[[ "$(uname -s)/$(uname -m)" == "Darwin/arm64" ]] || \
+  die "mlx-shtf requires Apple Silicon macOS — MLX is not supported on $(uname -s)/$(uname -m)."
+command -v mlx_lm.generate >/dev/null 2>&1 || \
+  die "mlx_lm not found on PATH. Run ./install.sh (or: pipx install mlx-lm)."
+
+# --- RAM-fit guard: refuse to load a model bigger than free RAM (it swap-kills
+#     the Mac otherwise). Only enforceable when the model is already cached. ---
+hf_hub_dir() {
+  if   [[ -n "${HF_HUB_CACHE:-}" ]]; then printf '%s' "$HF_HUB_CACHE"
+  elif [[ -n "${HF_HOME:-}" ]];      then printf '%s/hub' "$HF_HOME"
+  else printf '%s/.cache/huggingface/hub' "$HOME"; fi
+}
+ram_guard() {
+  [[ "${SHTF_FORCE:-0}" == "1" ]] && return 0
+  local snap; snap="$(hf_hub_dir)/models--${MODEL//\//--}/snapshots"
+  [[ -d "$snap" ]] || return 0                      # not cached → size unknown, skip
+  local model_gib avail_gib free_pages
+  model_gib=$(( $(du -sLk "$snap" 2>/dev/null | awk '{print $1}') / 1048576 ))
+  free_pages=$(vm_stat 2>/dev/null | awk '/Pages (free|inactive|speculative|purgeable)/ {gsub(/\./,"",$NF); s+=$NF} END{print s+0}')
+  avail_gib=$(( free_pages * 16384 / 1073741824 ))
+  if (( model_gib + 3 > avail_gib )); then
+    die "$MODEL_SHORT needs ~${model_gib} GB but only ~${avail_gib} GB is free.
+       Close some apps, pick a smaller model (shtf models), or set SHTF_FORCE=1 to override."
+  fi
+}
+
+# --- core generation: prompt on stdin, system prompt as $1. Foreground (no
+#     backgrounding — that would send stdin to /dev/null) and fed via an
+#     explicit redirect so large prompts are passed intact. ---
+generate() {
+  local sys="$1" inf outf
+  inf="$(mktemp)"; outf="$(mktemp)"; cat > "$inf"
+  ram_guard
+  printf '→ shtf: thinking with %s…\n' "$MODEL_SHORT" >&2
+  mlx_lm.generate --model "$MODEL" --system-prompt "$sys" --prompt - \
+    --max-tokens "$MAX_TOKENS" --temp "$TEMP" --verbose False <"$inf" >"$outf" 2>/dev/null || true
+  cat "$outf"; rm -f "$inf" "$outf"
+}
+
+log_run() {                          # $1 = command
+  mkdir -p "$(dirname "$LOG_FILE")"
+  printf '{"ts":"%s","cmd":"%s","model":"%s"}\n' \
+    "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$1" "$MODEL" >> "$LOG_FILE"
+}
+
+CHAT_SYS='You are a concise, knowledgeable offline assistant running locally. Answer directly and accurately. If you are unsure, say so rather than inventing details.'
+CODE_SYS='You are an expert programmer. Give correct, idiomatic, concise help. Prefer minimal, working code. When given a file, ground your answer in it.'
+ASK_SYS='Answer the question using ONLY the provided context from local files. Cite the file path(s) you used. If the answer is not in the context, say "Not found in the provided files." Do not invent details.'
+
+case "$cmd" in
+  chat)
+    command -v mlx_lm.chat >/dev/null 2>&1 || die "mlx_lm.chat not found (update mlx-lm)."
+    ram_guard
+    echo "→ shtf: offline chat with $MODEL_SHORT  (Ctrl-D / 'q' to quit)" >&2
+    log_run chat
+    exec mlx_lm.chat --model "$MODEL"
+    ;;
+
+  code)
+    [[ $# -gt 0 ]] || die "usage: shtf code [file] <prompt…>"
+    local_file=""; if [[ -f "$1" ]]; then local_file="$1"; shift; fi
+    prompt="$*"
+    [[ -n "$prompt" || -n "$local_file" ]] || die "usage: shtf code [file] <prompt…>"
+    log_run code
+    if [[ -n "$local_file" ]]; then
+      { printf '%s\n\n=== %s ===\n' "${prompt:-Review this file and explain it.}" "$local_file"
+        cat "$local_file"; } | generate "$CODE_SYS"
+    else
+      generate "$CODE_SYS" <<<"$prompt"
+    fi
+    ;;
+
+  ask)
+    [[ $# -ge 2 ]] || die "usage: shtf ask <path> <question…>"
+    path="$1"; shift; question="$*"
+    [[ -e "$path" ]] || die "path not found: $path"
+    log_run ask
+    # Lexical retrieval (v0.1; embeddings are a tracked enhancement): rank text
+    # files under <path> by how many question keywords they contain, then stuff
+    # the top files (up to a char budget) into the context.
+    kw="$(printf '%s' "$question" | tr '[:upper:]' '[:lower:]' | tr -cs 'a-z0-9' '\n' | awk 'length>=4' | sort -u)"
+    [[ -n "$kw" ]] || die "question has no searchable keywords (use longer words)."
+    pat="$(printf '%s' "$kw" | paste -sd'|' -)"
+    budget=12000; ctx=""; used=0
+    while IFS= read -r f; do
+      (( used >= budget )) && break
+      chunk="$(head -c $(( budget - used )) "$f" 2>/dev/null)"
+      ctx="${ctx}"$'\n'"### ${f}"$'\n'"${chunk}"
+      used=$(( used + ${#chunk} ))
+    done < <(
+      while IFS= read -r f; do
+        grep -Iq . "$f" 2>/dev/null || continue          # text files only
+        n=$(grep -oiE "$pat" "$f" 2>/dev/null | wc -l | tr -d ' ')
+        [[ "${n:-0}" -gt 0 ]] && printf '%s\t%s\n' "$n" "$f"
+      done < <(find "$path" -type f -size -200k 2>/dev/null) | sort -rn | cut -f2-
+    )
+    [[ "$ctx" =~ [^[:space:]] ]] || die "no local files under '$path' matched: $question"
+    printf 'Context:\n%s\n\nQuestion: %s\n' "$ctx" "$question" | generate "$ASK_SYS"
+    ;;
+
+  models)
+    echo "active model: $MODEL"
+    echo "  set per-run:  SHTF_MODEL=<hf-repo> shtf …"
+    echo "  set default:  echo <hf-repo> > $CONFIG_DIR/model   (or re-run ./install.sh)"
+    ;;
+
+  *)
+    # Unknown first word → treat the whole thing as a one-shot question.
+    log_run ask-oneshot
+    generate "$CHAT_SYS" <<<"$cmd${*:+ $*}"
+    ;;
+esac
