@@ -57,6 +57,14 @@ Loading a model bigger than your free RAM **swap-kills the Mac**. Before loading
 - `pipx` (the installer adds it via Homebrew if missing) → `mlx-lm`
 - `curl` + `python3` for the install-time model sizing
 
+## Documentation
+
+Full docs live in [`docs/`](docs/index.md):
+
+- [Installation](docs/installation.md) · [Usage](docs/usage.md) · [Configuration](docs/configuration.md)
+- [Models](docs/models.md) · [RAM guard](docs/ram-guard.md) · [Architecture](docs/architecture.md)
+- [Troubleshooting](docs/troubleshooting.md) · [Contributing](docs/contributing.md) · [Changelog](CHANGELOG.md)
+
 ## Caveats
 
 - A local model is weaker than a frontier cloud model; this is a **resilience tool**, not a daily replacement.
