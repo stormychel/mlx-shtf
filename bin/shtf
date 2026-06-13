@@ -11,7 +11,7 @@
 
 set -euo pipefail
 
-VERSION="0.1.0"
+VERSION="0.1.1"
 DEFAULT_MODEL="mlx-community/Qwen2.5-14B-Instruct-8bit"
 
 CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/mlx-shtf"
@@ -87,13 +87,21 @@ ram_guard() {
 #     backgrounding — that would send stdin to /dev/null) and fed via an
 #     explicit redirect so large prompts are passed intact. ---
 generate() {
-  local sys="$1" inf outf
-  inf="$(mktemp)"; outf="$(mktemp)"; cat > "$inf"
+  local sys="$1" inf outf errf rc=0
+  inf="$(mktemp)"; outf="$(mktemp)"; errf="$(mktemp)"
+  cat > "$inf"
   ram_guard
   printf '→ shtf: thinking with %s…\n' "$MODEL_SHORT" >&2
   mlx_lm.generate --model "$MODEL" --system-prompt "$sys" --prompt - \
-    --max-tokens "$MAX_TOKENS" --temp "$TEMP" --verbose False <"$inf" >"$outf" 2>/dev/null || true
-  cat "$outf"; rm -f "$inf" "$outf"
+    --max-tokens "$MAX_TOKENS" --temp "$TEMP" --verbose False <"$inf" >"$outf" 2>"$errf" || rc=$?
+  if (( rc != 0 )) || ! [[ "$(cat "$outf")" =~ [^[:space:]] ]]; then
+    echo "error: generation failed (model: $MODEL_SHORT) — mlx_lm said:" >&2
+    sed 's/^/  /' "$errf" >&2
+    rm -f "$inf" "$outf" "$errf"
+    exit 1
+  fi
+  cat "$outf"
+  rm -f "$inf" "$outf" "$errf"
 }
 
 log_run() {                          # $1 = command
@@ -122,8 +130,8 @@ case "$cmd" in
     [[ -n "$prompt" || -n "$local_file" ]] || die "usage: shtf code [file] <prompt…>"
     log_run code
     if [[ -n "$local_file" ]]; then
-      { printf '%s\n\n=== %s ===\n' "${prompt:-Review this file and explain it.}" "$local_file"
-        cat "$local_file"; } | generate "$CODE_SYS"
+      combined="$(printf '%s\n\n=== %s ===\n' "${prompt:-Review this file and explain it.}" "$local_file"; cat "$local_file")"
+      generate "$CODE_SYS" <<<"$combined"
     else
       generate "$CODE_SYS" <<<"$prompt"
     fi
@@ -154,7 +162,8 @@ case "$cmd" in
       done < <(find "$path" -type f -size -200k 2>/dev/null) | sort -rn | cut -f2-
     )
     [[ "$ctx" =~ [^[:space:]] ]] || die "no local files under '$path' matched: $question"
-    printf 'Context:\n%s\n\nQuestion: %s\n' "$ctx" "$question" | generate "$ASK_SYS"
+    askinput="$(printf 'Context:\n%s\n\nQuestion: %s\n' "$ctx" "$question")"
+    generate "$ASK_SYS" <<<"$askinput"
     ;;
 
   models)
