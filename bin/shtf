@@ -11,7 +11,7 @@
 
 set -euo pipefail
 
-VERSION="0.1.1"
+VERSION="0.1.2"
 DEFAULT_MODEL="mlx-community/Qwen2.5-14B-Instruct-8bit"
 
 CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/mlx-shtf"
@@ -148,19 +148,23 @@ case "$cmd" in
     kw="$(printf '%s' "$question" | tr '[:upper:]' '[:lower:]' | tr -cs 'a-z0-9' '\n' | awk 'length>=4' | sort -u)"
     [[ -n "$kw" ]] || die "question has no searchable keywords (use longer words)."
     pat="$(printf '%s' "$kw" | paste -sd'|' -)"
+    # Rank text files by keyword hits → temp file. (Flat pipeline, not nested
+    # process substitution — bash 3.2 mis-parses `<( … <(…) … )` at runtime.)
+    rankf="$(mktemp)"
+    find "$path" -type f -size -200k -not -path '*/.git/*' 2>/dev/null | while IFS= read -r f; do
+      grep -Iq . "$f" 2>/dev/null || continue            # text files only
+      n=$(grep -oiE "$pat" "$f" 2>/dev/null | wc -l | tr -d ' ' || true)
+      [[ "${n:-0}" -gt 0 ]] && printf '%s\t%s\n' "$n" "$f"
+    done | sort -rn | cut -f2- > "$rankf" || true
+
     budget=12000; ctx=""; used=0
     while IFS= read -r f; do
       (( used >= budget )) && break
       chunk="$(head -c $(( budget - used )) "$f" 2>/dev/null)"
       ctx="${ctx}"$'\n'"### ${f}"$'\n'"${chunk}"
       used=$(( used + ${#chunk} ))
-    done < <(
-      while IFS= read -r f; do
-        grep -Iq . "$f" 2>/dev/null || continue          # text files only
-        n=$(grep -oiE "$pat" "$f" 2>/dev/null | wc -l | tr -d ' ')
-        [[ "${n:-0}" -gt 0 ]] && printf '%s\t%s\n' "$n" "$f"
-      done < <(find "$path" -type f -size -200k 2>/dev/null) | sort -rn | cut -f2-
-    )
+    done < "$rankf"
+    rm -f "$rankf"
     [[ "$ctx" =~ [^[:space:]] ]] || die "no local files under '$path' matched: $question"
     askinput="$(printf 'Context:\n%s\n\nQuestion: %s\n' "$ctx" "$question")"
     generate "$ASK_SYS" <<<"$askinput"
