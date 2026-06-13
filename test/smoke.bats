@@ -8,7 +8,7 @@ BIN="${BATS_TEST_DIRNAME}/../bin/mlx-shtf"
 @test "--version prints the version" {
   run "$BIN" --version
   [ "$status" -eq 0 ]
-  [[ "$output" == *"mlx-shtf 0.1.4"* ]]
+  [[ "$output" == *"mlx-shtf 0.1.5"* ]]
 }
 
 @test "--help shows usage and the commands" {

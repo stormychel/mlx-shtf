@@ -11,6 +11,7 @@ A fully-offline local AI kit for Apple Silicon — **chat**, **doc Q&A** (RAG ov
 - [Configuration](configuration.md) — env vars, the config file, resolution precedence
 - [Models](models.md) — the curated list, RAM-fit ranking, using your own model
 - [RAM guard](ram-guard.md) — how `mlx-shtf` avoids swap-killing your Mac
+- [Coding agent](agent.md) — drive Claude Code with the local model (`mlx-shtf agent`)
 - [Architecture](architecture.md) — how chat / ask / code work under the hood
 - [Troubleshooting](troubleshooting.md) — common errors and fixes
 - [Contributing](contributing.md) — dev setup, testing discipline, bash 3.2 rules

@@ -25,6 +25,7 @@ mlx-shtf ask ./docs "how does auth work?"  # RAG: answer grounded in local files
 mlx-shtf code ./server.swift "find bugs"   # coding help, file as context
 mlx-shtf code "write a bash retry wrapper" # coding help, prompt only
 mlx-shtf models                            # show the active model / how to change
+mlx-shtf agent                             # Claude Code, backed by the local MLX model
 ```
 
 | Command | What it does |
@@ -60,7 +61,7 @@ Loading a model bigger than your free RAM **swap-kills the Mac**. Before loading
 
 ## Documentation
 
-Full docs live in [`docs/`](docs/index.md):
+Full docs live in [`docs/`](docs/index.md) — including [using the model as a coding agent](docs/agent.md) (Claude Code via a local LiteLLM bridge):
 
 - [Installation](docs/installation.md) · [Usage](docs/usage.md) · [Configuration](docs/configuration.md)
 - [Models](docs/models.md) · [RAM guard](docs/ram-guard.md) · [Architecture](docs/architecture.md)

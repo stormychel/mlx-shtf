@@ -2,6 +2,11 @@
 
 All notable changes to `mlx-shtf`. Versioning is loosely semantic; this is early software.
 
+## [0.1.5] — 2026-06-13
+
+- **`mlx-shtf agent`** — launch **Claude Code** backed by the local MLX model. Starts `mlx_lm.server`, a LiteLLM bridge (Anthropic↔OpenAI; `hosted_vllm/` provider so it hits `/chat/completions`, not the `/v1/responses` that mlx_lm.server 404s), exports the `ANTHROPIC_*` env, and `exec`s `claude`. RAM-guarded; ports via `SHTF_AGENT_MODEL_PORT`/`SHTF_AGENT_PROXY_PORT`.
+- Verified the Anthropic `/v1/messages` → bridge → `mlx_lm.server` transport end-to-end. Caveats (documented): needs a tool-calling coder model; `mlx_lm.server` can degrade over many requests; Ollama remains the reliable agent backend. See [docs/agent.md](docs/agent.md).
+
 ## [0.1.4] — 2026-06-13
 
 - **Renamed the command `shtf` → `mlx-shtf`** for consistency with `mlx-diff`. Config/state dirs (`~/.config/mlx-shtf`, `~/.local/state/mlx-shtf`) and `SHTF_*` env vars are unchanged. Re-run `./install.sh` to update the symlink.

@@ -11,7 +11,7 @@
 
 set -euo pipefail
 
-VERSION="0.1.4"
+VERSION="0.1.5"
 DEFAULT_MODEL="mlx-community/Qwen2.5-14B-Instruct-8bit"
 
 CONFIG_DIR="${XDG_CONFIG_HOME:-$HOME/.config}/mlx-shtf"
@@ -37,6 +37,7 @@ Usage:
   mlx-shtf ask <path> <question…>    Answer grounded in local files (RAG)
   mlx-shtf code [file] <prompt…>     Coding help; include a file for context
   mlx-shtf <question…>               One-shot question (no files)
+  mlx-shtf agent [args…]             Launch Claude Code backed by the local MLX model
   mlx-shtf models                    Show the active model and how to change it
   mlx-shtf --version | -h, --help
 
@@ -155,6 +156,54 @@ case "$cmd" in
     echo "→ mlx-shtf: offline chat with $MODEL_SHORT  (Ctrl-D / 'q' to quit)" >&2
     log_run chat
     exec mlx_lm.chat --model "$MODEL"
+    ;;
+
+  agent)
+    # Use the local MLX model as the backend for Claude Code (an agentic coder):
+    #   mlx_lm.server (OpenAI API)  →  LiteLLM (Anthropic↔OpenAI bridge)  →  claude
+    # A coder model that supports tool-calling is strongly recommended, e.g.
+    #   SHTF_MODEL=mlx-community/Qwen3-Coder-30B-A3B-Instruct-8bit mlx-shtf agent
+    command -v claude        >/dev/null 2>&1 || die "Claude Code ('claude') not found — install it first."
+    command -v mlx_lm.server >/dev/null 2>&1 || die "mlx_lm.server not found (update mlx-lm)."
+    command -v litellm       >/dev/null 2>&1 || die "litellm not found — install: pipx install 'litellm[proxy]'"
+    command -v curl          >/dev/null 2>&1 || die "curl not found."
+    ram_guard                                  # may fall back to a smaller cached model
+    mkdir -p "$STATE_DIR"
+    sport="${SHTF_AGENT_MODEL_PORT:-8080}"; lport="${SHTF_AGENT_PROXY_PORT:-8000}"
+    log_run agent
+    # 1. MLX model server (OpenAI-compatible) — start if not already up.
+    if ! curl -fsS -m 2 "http://127.0.0.1:$sport/v1/models" >/dev/null 2>&1; then
+      echo "→ mlx-shtf: starting MLX server ($MODEL_SHORT) on :$sport…" >&2
+      mlx_lm.server --model "$MODEL" --host 127.0.0.1 --port "$sport" >"$STATE_DIR/agent-server.log" 2>&1 &
+      for _ in $(seq 1 300); do curl -fsS -m 2 "http://127.0.0.1:$sport/v1/models" >/dev/null 2>&1 && break; sleep 1; done
+    fi
+    # 2. LiteLLM bridge (gives Claude Code an Anthropic /v1/messages endpoint).
+    if ! curl -fsS -m 2 "http://127.0.0.1:$lport/health/liveliness" >/dev/null 2>&1; then
+      cat > "$STATE_DIR/litellm.yaml" <<YAML
+model_list:
+  - model_name: local
+    litellm_params:
+      # hosted_vllm (not openai/) → forces /chat/completions, which mlx_lm.server
+      # implements; openai/ routes to /v1/responses which it returns 404 for.
+      model: hosted_vllm/$MODEL
+      api_base: http://127.0.0.1:$sport/v1
+      api_key: dummy
+general_settings:
+  master_key: mlx-shtf
+YAML
+      echo "→ mlx-shtf: starting LiteLLM bridge on :$lport…" >&2
+      litellm --config "$STATE_DIR/litellm.yaml" --port "$lport" >"$STATE_DIR/agent-proxy.log" 2>&1 &
+      for _ in $(seq 1 90); do curl -fsS -m 2 "http://127.0.0.1:$lport/health/liveliness" >/dev/null 2>&1 && break; sleep 1; done
+    fi
+    # 3. Point Claude Code at the local stack and launch it in the cwd.
+    export ANTHROPIC_BASE_URL="http://127.0.0.1:$lport"
+    export ANTHROPIC_AUTH_TOKEN="mlx-shtf"
+    export ANTHROPIC_DEFAULT_OPUS_MODEL="local"
+    export ANTHROPIC_DEFAULT_SONNET_MODEL="local"
+    export ANTHROPIC_DEFAULT_HAIKU_MODEL="local"
+    echo "→ mlx-shtf: launching Claude Code on $MODEL_SHORT (local, offline)." >&2
+    echo "   caveat: needs a tool-calling model; mlx_lm.server can degrade over many requests." >&2
+    exec claude "$@"
     ;;
 
   code)
