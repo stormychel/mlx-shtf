@@ -26,6 +26,8 @@ cd mlx-shtf
 
 `install.sh` verifies the host is Apple Silicon, installs `mlx-lm` via `pipx`, lets you **pick a model that fits your RAM** (color-ranked by fit, with already-installed models marked), pulls it, and symlinks `mlx-shtf` into `~/.local/bin`. Re-run any time to change model.
 
+The picker also surfaces a **frontier tier** — `mlx-community/GLM-5-4bit` and `mlx-community/Kimi-K2.7-Code-4bit`, open models that rival the top proprietary US models but need ~400–600 GB RAM (a **512 GB+ Mac Studio**). They're clearly flagged, selectable only behind a confirmation, and **never recommended**; the [RAM-fit guard](#ram-fit-guard) refuses them on smaller machines. On a normal Mac they're there for awareness, not use.
+
 ## Usage
 
 ```bash

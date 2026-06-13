@@ -27,11 +27,19 @@ CURATED=(
   "mlx-community/Llama-3.3-70B-Instruct-4bit	37"
 )
 
+# Frontier tier: state-of-the-art open models (GLM-5, Kimi K2.7) that rival the
+# top proprietary US models — but need ~400-600 GB RAM (a 512 GB+ Mac Studio).
+# Listed so the picker acknowledges them; never recommended, always flagged.
+FRONTIER=(
+  "mlx-community/GLM-5-4bit	390"
+  "mlx-community/Kimi-K2.7-Code-4bit	597"
+)
+
 if [[ -t 1 ]]; then
   BOLD=$'\033[1m'; DIM=$'\033[2m'; RST=$'\033[0m'
-  RED=$'\033[31m'; GREEN=$'\033[32m'; BLUE=$'\033[34m'; ORANGE=$'\033[38;5;208m'
+  RED=$'\033[31m'; GREEN=$'\033[32m'; BLUE=$'\033[34m'; ORANGE=$'\033[38;5;208m'; MAGENTA=$'\033[38;5;201m'
 else
-  BOLD=""; DIM=""; RST=""; RED=""; GREEN=""; BLUE=""; ORANGE=""
+  BOLD=""; DIM=""; RST=""; RED=""; GREEN=""; BLUE=""; ORANGE=""; MAGENTA=""
 fi
 
 say() { printf '%s==>%s %s\n' "$BOLD" "$RST" "$1"; }
@@ -146,6 +154,25 @@ done
 printf '\n  %sBAD%s >¾ RAM   %sTOUGH%s >½   %sPERFECT%s ≈½   %sROOMY%s <½ (safe, smaller)\n\n' \
   "$RED" "$RST" "$ORANGE" "$RST" "$GREEN" "$RST" "$BLUE" "$RST"
 
+# Frontier models, listed separately and never recommended: huge open models that
+# only a 512 GB+ Mac Studio can run. Appended to the selectable list so a user on
+# such hardware can still pick one by number.
+if (( ${#FRONTIER[@]} > 0 )); then
+  printf '  %sFRONTIER%s — open models rivaling top US models; need a 512 GB+ Mac Studio:\n' "$MAGENTA" "$RST"
+  for entry in "${FRONTIER[@]}"; do
+    frepo="${entry%%$'\t'*}"; ffb="${entry##*$'\t'}"
+    fs="$(size_gib "$frepo" "$ffb")"
+    repos+=("$frepo"); sizes+=("$fs"); labels+=("FRONTIER"); colors+=("$MAGENTA")
+    if model_cached "$frepo"; then cached+=("1"); else cached+=("0"); fi
+    fj=$(( ${#repos[@]} - 1 )); fmark=""
+    [[ "${cached[$fj]}" == 1 ]] && fmark=" ${GREEN}✓ installed${RST}"
+    printf '  %s%2d%s) %s%-7s%s %3s GB  %s%-34s%s%s\n' \
+      "$BOLD" "$(( fj + 1 ))" "$RST" "$MAGENTA" "FRONTIER" "$RST" "$fs" \
+      "$DIM" "$(short "$frepo")" "$RST" "$fmark"
+  done
+  printf '\n'
+fi
+
 choice=$(( rec + 1 ))
 if [[ -t 0 ]]; then
   read -r -p "Pick a model [${choice}]: " reply || true
@@ -157,6 +184,18 @@ if [[ -t 0 ]]; then
   fi
 fi
 CHOSEN="${repos[$(( choice - 1 ))]}"
+
+# A frontier pick is a 400-600 GB download that needs a 512 GB+ Mac — confirm it.
+for entry in "${FRONTIER[@]}"; do
+  [[ "${entry%%$'\t'*}" == "$CHOSEN" ]] || continue
+  say "${MAGENTA}FRONTIER${RST} model: ${CHOSEN##*/} — needs a 512 GB+ Mac Studio; the download is hundreds of GB."
+  if [[ -t 0 ]]; then
+    read -r -p "Select and pre-pull it anyway? [y/N]: " yn || true
+    [[ "${yn:-}" =~ ^[Yy] ]] || die "Frontier selection aborted."
+  fi
+  break
+done
+
 say "Selected: $CHOSEN"
 
 mkdir -p "$CONFIG_DIR"

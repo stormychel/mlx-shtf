@@ -2,6 +2,10 @@
 
 All notable changes to `mlx-shtf`. Versioning is loosely semantic; this is early software.
 
+## [0.1.7] — 2026-06-13
+
+- **Frontier tier in the model picker** — `install.sh` now also lists state-of-the-art *open* models that rival top proprietary US models: `mlx-community/GLM-5-4bit` (~419 GB) and `mlx-community/Kimi-K2.7-Code-4bit` (~641 GB). They're 400–600 GB even at 4-bit, so they only run on a 512 GB+ Mac Studio: listed and selectable by number (behind a confirmation), but never recommended, and the runtime RAM guard refuses them on smaller machines. Acting on the GLM-5.2 / Kimi K2.7 open-model releases the same week the cloud Fable/Mythos access was revoked.
+
 ## [0.1.6] — 2026-06-13
 
 - Fix `mlx-shtf agent` aborting on its first status line with `sport: unbound variable` — a multibyte ellipsis was glued directly onto `$sport`/`$lport`, so bash folded the byte into the variable name. Braced the variables, and verified the full `agent` command end-to-end (not just the bridge pieces).
